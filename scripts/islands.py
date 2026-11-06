@@ -190,7 +190,7 @@ def frame(fr):
         f = ISF[n] & ~np.isnan(P[:, 0])
         dots.append((P[f], (col * .78)[None] * (1 - heat[f, None]) + 255 * heat[f, None], heat[f]))
         recent = ET[a0:a1][mine].max() if mine.any() else -9
-        labels.append((k, ctr / SS, rp / SS, recent))
+        if RAD[a, k] > 0: labels.append((k, ctr / SS, rp / SS, recent))
         for e in EN[a0:a1][mine][-14:]:
             if AV[fr] is not None and t - last[e] < .3 and not np.isnan(P[e, 0]):
                 al = int(150 * (1 - (t - last[e]) / .3)); d.line((AV[fr][0] * SS, AV[fr][1] * SS, P[e, 0], P[e, 1]), fill=tuple(int(v) for v in col) + (al,), width=2)

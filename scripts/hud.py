@@ -29,6 +29,7 @@ for c in C:
     elif c['cursor']: cu[i] += 1
 pr = np.zeros(N)
 for p in json.load(open('build/prs.json')):
+    if p['repo'] in common.CFG.get('exclude_repos', []): continue
     t = dt.datetime.fromisoformat(p['closed'].replace('Z', '+00:00')).astimezone(TZ); i = (t.date() - s0).days
     if 0 <= i < N: pr[i] += 1
 cum = lambda a: np.cumsum(a, axis=0)
