@@ -1,0 +1,17 @@
+{
+  "$schema": "https://anthropic.com/claude-code/marketplace.schema.json",
+  "name": "code-islands",
+  "description": "Turn your commits across every repo into a video",
+  "owner": {
+    "name": "dreamiurg",
+    "url": "https://github.com/dreamiurg"
+  },
+  "plugins": [
+    {
+      "name": "code-islands",
+      "source": "./",
+      "description": "Turn your commits across every repo into a video: each repo is a floating island that grows as you work, with a live stats HUD",
+      "version": "0.1.0"
+    }
+  ]
+}

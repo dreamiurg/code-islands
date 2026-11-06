@@ -1,0 +1,13 @@
+{
+  "name": "code-islands",
+  "version": "0.1.0",
+  "description": "Turn your commits across every repo into a video: each repo is a floating island that grows as you work, with a live stats HUD",
+  "author": {
+    "name": "dreamiurg",
+    "email": "dreamiurg@users.noreply.github.com"
+  },
+  "homepage": "https://github.com/dreamiurg/code-islands",
+  "repository": "https://github.com/dreamiurg/code-islands",
+  "license": "MIT",
+  "keywords": ["git", "video", "visualization", "year-in-review", "github", "agentic-coding"]
+}
