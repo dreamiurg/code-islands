@@ -1,4 +1,4 @@
-"""Optional soundtrack from ElevenLabs. Needs ELEVENLABS_API_KEY. Usage: music.py [prompt]"""
+"""Example: generate a soundtrack with ElevenLabs. Needs ELEVENLABS_API_KEY. Run from the workspace with an optional prompt."""
 import json, os, sys, urllib.error, urllib.request
 
 meta = json.load(open('build/meta.json'))

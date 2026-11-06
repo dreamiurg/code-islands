@@ -23,12 +23,21 @@ from PIL import Image
 Image.new('RGB', (128, 128), (200, 120, 60)).save('avatar.png')
 import json
 json.dump(dict(since='2026-01-01', timezone='UTC', duration=8, authors=['test dev'], local_repos=['$W/src/hidden-treasure']), open('config.json', 'w'))"
+ffmpeg -v error -f lavfi -i "sine=frequency=220:duration=9" music.mp3
 python3 "$S/collect.py"
 python3 -c "import json;assert json.load(open('build/public.json'))==['open-widget']"
+python3 -c "
+import json;c=json.load(open('config.json'));c['exclude_repos']=['acme/open-widget'];json.dump(c,open('config.json','w'))"
+python3 "$S/collect.py"
+python3 -c "import json;assert {c['repo'] for c in json.load(open('build/commits.json'))}=={'hidden-treasure'}"
+python3 -c "
+import json;c=json.load(open('config.json'));c['exclude_repos']=[];json.dump(c,open('config.json','w'))"
+python3 "$S/collect.py"
 sh "$S/render.sh"
 VARIANT=share sh "$S/render.sh"
 for f in out/code-islands-1080p.mp4 out/code-islands-share-720p.mp4; do
   [ "$(ffprobe -v error -show_entries format=duration -of csv=p=0 $f | cut -d. -f1)" = 8 ] || [ "$(ffprobe -v error -show_entries format=duration -of csv=p=0 $f | cut -d. -f1)" = 7 ]
 done
+[ "$(ffprobe -v error -show_entries stream=codec_type -of csv=p=0 out/code-islands-1080p.mp4 | sort | tr -d '\n')" = audiovideo ]
 sh "$S/scan.sh"
 echo PASS

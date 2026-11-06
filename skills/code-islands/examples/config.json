@@ -1,0 +1,10 @@
+{
+  "since": "2025-01-01",
+  "timezone": "America/New_York",
+  "duration": 90,
+  "authors": ["\\bmy-login\\b", "\\bMy Name\\b", "me@example\\.com"],
+  "exclude_repos": ["some-employer/private-repo"],
+  "local_repos": ["~/projects/not-on-github"],
+  "avatar": "avatar.png",
+  "music": "music.mp3"
+}

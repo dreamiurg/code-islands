@@ -1,6 +1,6 @@
 {
   "name": "code-islands",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "Turn your commits across every repo into a video: each repo is a floating island that grows as you work, with a live stats HUD",
   "author": {
     "name": "dreamiurg",

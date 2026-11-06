@@ -1,102 +1,96 @@
 ---
 name: code-islands
-description: Make a video of one person's coding history across all their repositories, where each repo is a separate floating island that grows as they commit, with a live stats HUD, AI model release timeline and an optional soundtrack. Also makes a shareable cut with private repo names blurred. Use when someone asks for a video, animation or visualization of their commits, contributions, year in code, or agentic coding history, across one or many repos.
+description: This skill should be used when someone asks for a video, animation, timelapse, year in review or "wrapped" of their commits, contributions or agentic coding history, across one or many repos. Renders each repo as a separate floating island that grows with their work, with a stats HUD and AI release timeline, plus a share cut that blurs private repo names.
 ---
 
 # Code Islands
 
-Scripts live in `${CLAUDE_PLUGIN_ROOT}/scripts`. Each one runs with the workspace as its current directory.
+Turn one person's commits across all their repos into a 1080p video. Works on macOS and Linux.
+
+Scripts live in `${CLAUDE_PLUGIN_ROOT}/scripts`. Run every command from the workspace folder, written below as `cd <workspace> && ...`, because each script reads `config.json` and `build/` from the current directory.
 
 ## 1. Set up
 
-Run `sh ${CLAUDE_PLUGIN_ROOT}/scripts/doctor.sh` and fix what it reports.
+Run `sh "${CLAUDE_PLUGIN_ROOT}/scripts/doctor.sh"` and fix what it reports. Run `gh auth setup-git` so private repos can be cloned.
 
-Ask the user for anything you cannot work out:
+Ask for anything that cannot be worked out:
 
 - **Workspace folder.** Default `~/code-islands`. It holds full clones, so it can take gigabytes.
-- **Start date.** Suggest a round date, then offer the first AI co-authored commit once step 2 has found it.
-- **Length in seconds.** Default 90. Pacing follows from the length, so about 0.2 seconds a day suits a year or more.
-- **Which cuts.** The full cut shows every repo name. The share cut blurs private ones.
-- **Sound.** The user's own `music.mp3`, a generated track, or silent.
+- **Start date.** Suggest a round date. Offer the first AI co-authored commit once `collect.py` has reported it.
+- **Timezone.** Sets the hour-of-day chart and day boundaries.
+- **Length in seconds.** Default 90. Pacing follows from the length.
+- **Sound.** An audio file, or silent. See `references/music.md`.
 
-Write `config.json` in the workspace:
+Write `config.json` in the workspace, following `examples/config.json`. Only `since` and `authors` are required.
 
-```json
-{
-  "since": "2025-01-01",
-  "timezone": "America/New_York",
-  "duration": 90,
-  "authors": ["login-or-name-regex", "email@example\\.com"],
-  "exclude_repos": [],
-  "local_repos": []
-}
-```
+`authors` are case-insensitive regexes matched against `name|email` of each commit. Start from `gh api user` (login, name) and `git config user.email`, and wrap names in `\b` so `dan` does not match `daniel`. Ask for old names and emails, since they split history.
 
-- `authors` are regexes matched against `name|email` of each commit. Start from `gh api user` (login, name) and `git config user.email`. Ask for old names and emails, since they split history.
-- `local_repos` are paths to repos that are not on GitHub. They always count as private.
-- `exclude_repos` takes `owner/name`. Ask before including work or client repos in a cut other people will see.
-
-Save the user's GitHub avatar as `avatar.png`, square, at least 128px:
-`curl -sL "https://github.com/<login>.png?size=200" -o avatar.png`
-
-## 2. Gather
+Save a square avatar of at least 128px as `avatar.png`:
 
 ```sh
-python3 ${CLAUDE_PLUGIN_ROOT}/scripts/discover.py
-python3 ${CLAUDE_PLUGIN_ROOT}/scripts/prs.py
-python3 ${CLAUDE_PLUGIN_ROOT}/scripts/collect.py
+cd <workspace> && curl -sL "https://github.com/<login>.png?size=200" -o avatar.png
 ```
 
-`prs.py` is slow on purpose, because GitHub search is rate limited. Run it in the background on long ranges. Rerun `collect.py` after any `config.json` change.
+## 2. Choose repos
 
-Show the user the totals and top repos. Check for name variants that were missed, and for near-duplicate repos worth adding to `exclude_repos`.
+List repos without cloning anything:
 
-## 3. AI releases
+```sh
+cd <workspace> && python3 "${CLAUDE_PLUGIN_ROOT}/scripts/discover.py"
+```
 
-`data/ai_releases.json` drives the left panel and the heatmap ticks. Search the web for releases newer than its last entry, then write the full list to `ai_releases.json` in the workspace, which takes priority. Entries are `{"date", "name", "vendor"}`. `anthropic` is orange, `openai` is blue, and any other vendor is purple. Check dates against the vendors' own announcements.
+Show the list. Ask which employer, client or other sensitive repos to leave out, and add those to `exclude_repos` as `owner/name`. Add repos that are not on GitHub to `local_repos`. Those always count as private.
 
-## 4. Sound
+## 3. Gather
 
-For a generated track, the user needs `ELEVENLABS_API_KEY` set. Generating costs credits, so confirm first:
-`python3 ${CLAUDE_PLUGIN_ROOT}/scripts/music.py "optional prompt"`
-Without `music.mp3` the video is silent.
+```sh
+cd <workspace> && python3 "${CLAUDE_PLUGIN_ROOT}/scripts/discover.py" clone && python3 "${CLAUDE_PLUGIN_ROOT}/scripts/prs.py" && python3 "${CLAUDE_PLUGIN_ROOT}/scripts/collect.py"
+```
+
+`prs.py` waits between requests because GitHub search is rate limited, so run long ranges in the background and let the chain finish before step 5.
+
+Show the totals and top repos. Look for missed name variants, and for wrong people caught by a loose regex.
+
+Rerun `collect.py` after any `config.json` change. After moving `since` earlier, rerun all three commands.
+
+## 4. AI releases
+
+`${CLAUDE_PLUGIN_ROOT}/data/ai_releases.json` drives the left panel and the heatmap ticks. Search the web for releases newer than its last entry, then write the full list to `ai_releases.json` in the workspace, which takes priority. Entries are `{"date", "name", "vendor"}`. `anthropic` draws orange, `openai` blue, and any other vendor purple. Check dates against the vendors' own announcements.
 
 ## 5. Preview
 
-Pick a time late in the video and check a real frame before the full render:
+Check a real frame before the full render. Use a time late in the video:
 
 ```sh
-python3 ${CLAUDE_PLUGIN_ROOT}/scripts/islands.py test 60
-python3 ${CLAUDE_PLUGIN_ROOT}/scripts/hud.py test 60 build/isl_60.png
+cd <workspace> && python3 "${CLAUDE_PLUGIN_ROOT}/scripts/islands.py" test 60 && python3 "${CLAUDE_PLUGIN_ROOT}/scripts/hud.py" test 60 build/isl_60.png
 ```
 
-This writes `build/hud_60.png`. Look at it. Island size is set by `R0` and `EXP` at the top of `islands.py`. `SAFE` is the area the HUD leaves free.
+This writes `build/hud_60.png`. View it. `R0` and `EXP` at the top of `islands.py` set island size. `SAFE` is the area the HUD leaves free.
 
 ## 6. Render
 
+Run as one background job, because both cuts share `build/islands.mp4`:
+
 ```sh
-sh ${CLAUDE_PLUGIN_ROOT}/scripts/render.sh
-VARIANT=share sh ${CLAUDE_PLUGIN_ROOT}/scripts/render.sh
-sh ${CLAUDE_PLUGIN_ROOT}/scripts/scan.sh
+cd <workspace> && sh "${CLAUDE_PLUGIN_ROOT}/scripts/render.sh" && VARIANT=share sh "${CLAUDE_PLUGIN_ROOT}/scripts/render.sh" && sh "${CLAUDE_PLUGIN_ROOT}/scripts/scan.sh"
 ```
 
-Run these in the background. Files land in `out/`, at 1080p and 720p. `DUR=10 OUT=/tmp/try` makes a short test.
+Files land in `out/` at 1080p and 720p. `DUR=10 OUT=/tmp/try` in front of `render.sh` makes a short test.
 
-`scan.sh` reads one frame per second with OCR and fails if a private repo name shows in the share cut. The full cut is its control, so it should report names found there. It skips names under four characters.
+`scan.sh` needs `tesseract` and both cuts. It reads one frame per second with OCR, using the full cut as its control. It fails if a private name shows in the share cut, or if it cannot read names at all. Skip the share cut and the scan if the video stays private.
 
 ## Before anyone shares a cut
 
 Tell the user plainly:
 
-- The share cut blurs a fake name, so de-blurring reveals nothing. Public repos keep their real names.
-- Totals, activity patterns and the relative size of each island stay visible. Someone who knows the user may guess a large project.
-- Run `scan.sh` first, and view the result. It samples frames, so it is a check and not a proof.
-- Nothing in `repos/` or `build/` should be published. Those folders hold the private history.
+- The share cut blurs a random fake name, so de-blurring reveals nothing. Public repos keep their real names.
+- Totals, activity patterns and the size of each island stay visible. Someone who knows the user may guess a large project.
+- `scan.sh` samples frames and skips names under four characters, so it is a check and not a proof. View the video too.
+- Nothing in `repos/` or `build/` should be published. Those folders hold private history.
 
-## What the numbers mean
+## Additional resources
 
-- A commit counts once, even when forks share it. Merge commits are skipped.
-- Only each repo's default branch is read.
-- Line counts skip lockfiles, generated code, build output, binaries, and any file changing more than 5,000 lines in one commit.
-- AI mix covers commits with an AI co-author trailer, shared across those commits only.
-- Tools that leave no trailer do not appear in the AI mix.
+- `references/metrics.md`: what each number counts. Consult when a total looks wrong or the user asks.
+- `references/music.md`: where to get a track, plus a prompt for AI music tools.
+- `examples/config.json`: every config option.
+- `examples/music-elevenlabs.py`: generating a track through one API.

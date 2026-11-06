@@ -21,4 +21,5 @@ full, share = scan('full'), scan('share')
 print(f'{len(priv)} private repos. Control (full cut) found {len(full)} names. Share cut found {len(share)}: {share.most_common()}')
 shutil.rmtree('build/scan')
 assert not share, 'Private names visible in the share cut. Do not share it.'
+assert full or not [r for r in priv if len(r) >= 4], 'OCR found no names in the full cut, so this scan proves nothing.'
 P

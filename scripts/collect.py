@@ -8,7 +8,9 @@ SKIP = re.compile(r'(generated|\.lock$|lock\.ya?ml$|lock\.json$|\.lock\.hcl|\.sn
 BIG = 5000  # a single file changing more lines than this is treated as a data dump
 vis = {r['name'].replace('/', '__'): r for r in json.load(open('build/repos.json'))} if os.path.exists('build/repos.json') else {}
 
-src = [(os.path.basename(p)[:-4].split('__', 1)[1], p, vis.get(os.path.basename(p)[:-4], {}).get('private', True)) for p in glob.glob('repos/*.git')]
+skip = {r.replace('/', '__') for r in CFG.get('exclude_repos', [])}
+src = [(os.path.basename(p)[:-4].split('__', 1)[1], p, vis.get(os.path.basename(p)[:-4], {}).get('private', True))
+       for p in glob.glob('repos/*.git') if os.path.basename(p)[:-4] not in skip]
 src += [(os.path.basename(p.rstrip('/')), p, True) for p in map(os.path.expanduser, CFG.get('local_repos', []))]
 seen, commits, log, private = set(), [], [], collections.defaultdict(bool)
 for repo, path, priv in sorted(src):
