@@ -4,6 +4,8 @@
 
 [Watch the full video on YouTube](https://youtu.be/9C3tzDGUd-c)
 
+The story behind it: [My commits across 81 repos, as floating islands](https://dreamiurg.net/2026/11/06/my-commits-across-81-repos-as-floating-islands.html).
+
 ## TL;DR
 
 A Claude Code plugin that turns your commits across every repo into a video. Each repo is a floating island that appears when you start it and grows as you work.
